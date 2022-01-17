@@ -1,5 +1,9 @@
 package com.example.demo.days;
 
+import static java.util.function.UnaryOperator.identity;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +35,7 @@ public class Day5HydrothermalVenture {
                                               .stream()
                                               .map(Line::points)
                                               .flatMap(Collection::stream)
-                                              .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+                                              .collect(groupingBy(identity(), counting()));
 
     long totalPoints = pointsFrequencies.values()
                                         .stream()
