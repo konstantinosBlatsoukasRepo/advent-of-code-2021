@@ -1,13 +1,8 @@
 package com.example.demo.days;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.PrimitiveIterator.OfInt;
-import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 public class Day7TheTreacheryOfWhales {
