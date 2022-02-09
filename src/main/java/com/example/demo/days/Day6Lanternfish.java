@@ -20,10 +20,10 @@ public class Day6Lanternfish {
 
     SimulationResult currentSimulation = new SimulationResult(new ArrayList<>(initialInternalTimers), 0);
     for (int day = 0; day < days; day++) {
-      System.out.println(currentSimulation.internalTimers());
       currentSimulation = simulate(currentSimulation);
       simulationsPerDay.add(currentSimulation);
     }
+
 
     return  simulationsPerDay.stream()
                              .mapToLong(simulation -> simulation.totalFishProduced)
@@ -39,7 +39,7 @@ public class Day6Lanternfish {
 
     List<Long> timers = new ArrayList<>();
     for (int i = 0; i < 9; i++) {
-      timers.add(0l);
+      timers.add(0L);
     }
 
     for (long inputItem : inputList) {
@@ -48,23 +48,15 @@ public class Day6Lanternfish {
 
     for (int currentDay = 0; currentDay < days; currentDay++) {
       List<Long> newTimers = timers.subList(1, timers.size());
-      newTimers.add(0l);
+      newTimers.add(0L);
 
-      newTimers.set((int) 8, newTimers.get((int) 8) + timers.get((int) 0));
-      newTimers.set((int) 6, newTimers.get((int) 6) + timers.get((int) 0));
+      newTimers.set(8, newTimers.get((int) 8) + timers.get(0));
+      newTimers.set(6, newTimers.get(6) + timers.get(0));
 
       timers = newTimers;
-      System.out.println();
     }
 
     return timers.stream().mapToLong( x-> x).sum();
-  }
-
-  private long applyFishRules(long num) {
-    if (num == 0) {
-      return 6;
-    }
-    return --num;
   }
 
   private SimulationResult simulate(SimulationResult currentSimulation) {
@@ -72,7 +64,7 @@ public class Day6Lanternfish {
     int totalNewInternalTimers = 0;
     for (int i = 0; i < internalTimerz.size(); i++) {
       if (internalTimerz.get(i) == 0) {
-        internalTimerz.set(i, 6l);
+        internalTimerz.set(i, 6L);
         totalNewInternalTimers++;
       } else {
         long newValue = internalTimerz.get(i) - 1;
@@ -82,7 +74,7 @@ public class Day6Lanternfish {
 
     List<Long> currentInternalTimers = new ArrayList<>(internalTimerz);
     for (int i = 0; i < totalNewInternalTimers; i++) {
-      currentInternalTimers.add(8l);
+      currentInternalTimers.add(8L);
     }
 
     return new SimulationResult(currentInternalTimers, totalNewInternalTimers);

@@ -63,9 +63,6 @@ public class Day4GiantSquid {
       if (winner.winner() != null &&
           winner.winner().tableId() != -1 &&
           !winningTables.contains(winner.winner().tableId())) {
-
-        System.out.println("Table id :" + winner.winner().tableId());
-        System.out.println("Sum :" + winner.sum());
         winningTables.add(winner.winner().tableId());
         lastWinner = winner;
       }

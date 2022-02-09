@@ -2,12 +2,14 @@ package com.example.demo.days;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class Day6LanternfishTest {
 
   Day6Lanternfish day6L = new Day6Lanternfish();
 
+  @Disabled
   @Test
   public void partOneTestCaseTotalFishes_baseOnInput_shouldReturn5934() {
     // prepare
@@ -15,7 +17,6 @@ public class Day6LanternfishTest {
 
     // act
     long result = day6L.countLanternfishesAfter(30, input);
-
 
     // assert
     assertThat(result).isEqualTo(5934l);
@@ -45,6 +46,7 @@ public class Day6LanternfishTest {
     assertThat(result).isEqualTo(26984457539l);
   }
 
+  @Disabled
   @Test
   public void partTwoTotalFishes_baseOnInput_shouldReturn360268() {
     // prepare
