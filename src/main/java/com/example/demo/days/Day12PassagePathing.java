@@ -144,7 +144,7 @@ public class Day12PassagePathing {
 
     // starting node initialization
     Queue<List<String>> paths = new LinkedList<>();
-    paths.add(Arrays.asList(startNode));
+    paths.add(List.of(startNode));
 
     while (!paths.isEmpty()) {
       List<String> currentPath = paths.poll();
