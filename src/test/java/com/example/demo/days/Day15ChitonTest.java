@@ -166,6 +166,7 @@ class Day15ChitonTest {
     // assert
     assertThat(result).isEqualTo(315L);
   }
+
   @Test
   public void partTwoDay15Chiton_baseOnInput_shouldReturn2893L() {
     // prepare
@@ -277,6 +278,19 @@ class Day15ChitonTest {
 
     // assert
     assertThat(result).isEqualTo(2893L);
+  }
+
+  @Test
+  public void buzz() {
+    String test = "test";
+    foo(test);
+    System.out.println(test);
+  }
+
+  private void foo(String test) {
+    System.out.println(test);
+    test = "testz";
+    System.out.println(test);
   }
 
 }

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Day15Chiton {
 
@@ -28,7 +29,7 @@ public class Day15Chiton {
     Map<String, Integer> distances = initializeDistances(totalRows, totalColumns);
 
     // priority queue that contains the points along the costs
-    Comparator<PointWithCost> comparingCost = Comparator.comparing(pointWithCost -> pointWithCost.cost());
+    Comparator<PointWithCost> comparingCost = Comparator.comparing(PointWithCost::cost);
     PriorityQueue<PointWithCost> pointsWithCost = new PriorityQueue<>(totalNodes, comparingCost);
     pointsWithCost.add(new PointWithCost(getId(0, 0), 0));
 
@@ -81,7 +82,7 @@ public class Day15Chiton {
 
     String fifthBlock = buildFiveTilesFrom(input);
 
-    return  firstBlock +  secondBlock + thirdBlock  + forthBlock  + fifthBlock;
+    return firstBlock + secondBlock + thirdBlock + forthBlock + fifthBlock;
   }
 
   private String buildFiveTilesFrom(String input) {
@@ -104,8 +105,6 @@ public class Day15Chiton {
     return sb.toString();
   }
 
-
-
   private String increaseRiskLevel(String input) {
     return Arrays.stream(input.split("\n"))
                  .map(this::increaseLine)
@@ -117,8 +116,6 @@ public class Day15Chiton {
                  .map(risk -> String.valueOf(1 + ((Integer.parseInt(risk + 1) - 1) % 9)))
                  .collect(Collectors.joining(""));
   }
-
-
 
   private int getNewDist(PointWithCost lowestCostPoint,
                          String adjPoint,
@@ -136,10 +133,10 @@ public class Day15Chiton {
     List<List<Integer>> riskLevels = new ArrayList<>();
     List<String> lines = Arrays.stream(input.split("\n"))
                                .toList();
-    for (int row = 0; row < lines.size(); row++) {
-      List<Integer> columnValues  = Arrays.stream(lines.get(row).split(""))
-                                          .map(val -> Integer.parseInt(val))
-                                          .toList();
+    for (String line : lines) {
+      List<Integer> columnValues = Arrays.stream(line.split(""))
+                                         .map(Integer::parseInt)
+                                         .toList();
       riskLevels.add(columnValues);
     }
     return riskLevels;
@@ -170,11 +167,10 @@ public class Day15Chiton {
     int row = Integer.parseInt(rowColumnz[1]);
     int column = Integer.parseInt(rowColumnz[2]);
 
-    return  Arrays.asList(new Point(row + 1, column),
+    return  Stream.of(new Point(row + 1, column),
                           new Point(row - 1, column),
                           new Point(row, column + 1),
                           new Point(row, column - 1))
-                  .stream()
                   .filter(pointz -> isPointValid(pointz, riskLevels))
                   .map(point -> getId(point.row(), point.column()))
                   .toList();
