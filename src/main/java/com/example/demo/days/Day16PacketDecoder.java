@@ -1,5 +1,8 @@
 package com.example.demo.days;
 
+
+
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -8,9 +11,31 @@ import java.util.Queue;
 
 public class Day16PacketDecoder {
 
-  private enum TypeId {
+  private enum TypeOperationOrLiteral {
+    SUM,
+    PRODUCT,
+    MINIMUM,
+    MAXIMUM,
     LITERAL,
-    OPERATION
+    GRATER_THAN,
+    LESS_THAN,
+    EQUAL}
+
+  private record TypeId(int typeId) {
+
+    public TypeOperationOrLiteral getType() {
+      switch (this.typeId()) {
+        case 0 -> { return TypeOperationOrLiteral.SUM; }
+        case 1 -> { return TypeOperationOrLiteral.PRODUCT; }
+        case 2 -> { return TypeOperationOrLiteral.MINIMUM; }
+        case 3 -> { return TypeOperationOrLiteral.MAXIMUM; }
+        case 4 -> { return TypeOperationOrLiteral.LITERAL; }
+        case 5 -> { return TypeOperationOrLiteral.GRATER_THAN; }
+        case 6 -> { return TypeOperationOrLiteral.LESS_THAN; }
+        case 7 -> { return TypeOperationOrLiteral.EQUAL; }
+        default -> throw new IllegalStateException();
+      }
+    }
   }
 
   private enum LengthTypeId {
@@ -92,7 +117,28 @@ public class Day16PacketDecoder {
 
   // part one
   public int partOne(String input) {
+    String binaryFormat = getBinaryFormat(input);
+
+    int packetStartIndex = 0;
+    Packet rootPacket = parsePacket(binaryFormat, packetStartIndex);
+
+    return calculateVersionsSum(rootPacket);
+  }
+
+  // part two
+  public BigDecimal partTwo(String input) {
+    String binaryFormat = getBinaryFormat(input);
+    int packetStartIndex = 0;
+    Packet rootPacket = parsePacket(binaryFormat, packetStartIndex);
+    return evaluateTransmissionPacket(rootPacket);
+  }
+
+  private String getBinaryFormat(String input) {
     String padLeftZeros = "";
+
+    if (input.charAt(0) == '0' && input.charAt(1) == '4') {
+      padLeftZeros = "00000";
+    }
     if (input.charAt(0) == '1') {
       padLeftZeros = "000";
     }
@@ -105,12 +151,75 @@ public class Day16PacketDecoder {
       padLeftZeros = "0";
     }
 
-    String binaryFormat = padLeftZeros + new BigInteger(input, 16).toString(2);
+    return padLeftZeros + new BigInteger(input, 16).toString(2);
+  }
 
-    int packetStartIndex = 0;
-    Packet rootPacket = parsePacket(binaryFormat, packetStartIndex);
-
-    return calculateVersionsSum(rootPacket);
+  private BigDecimal evaluateTransmissionPacket(Packet packet) {
+    switch (packet.getTypeId().getType()) {
+      case SUM -> {
+        BigDecimal sum = BigDecimal.valueOf(0L);
+        for (Packet subPacket : packet.getSubPackets()) {
+          sum = sum.add(evaluateTransmissionPacket(subPacket));
+        }
+        return sum;
+      }
+      case PRODUCT -> {
+        BigDecimal product = BigDecimal.valueOf(1L);
+        for (Packet subPacket : packet.getSubPackets()) {
+          product = product.multiply(evaluateTransmissionPacket(subPacket));
+        }
+        return product;
+      }
+      case MINIMUM -> {
+        BigDecimal minimum = BigDecimal.valueOf(Long.MAX_VALUE);
+        for (Packet subPacket : packet.getSubPackets()) {
+          BigDecimal newMinVal = evaluateTransmissionPacket(subPacket);
+          if (minimum.compareTo(newMinVal) > 0) {
+            minimum = newMinVal;
+          }
+        }
+        return minimum;
+      }
+      case MAXIMUM -> {
+        BigDecimal maximum = BigDecimal.valueOf(Long.MIN_VALUE);
+        for (Packet subPacket : packet.getSubPackets()) {
+          BigDecimal newMaxVal = evaluateTransmissionPacket(subPacket);
+          if (maximum.compareTo(newMaxVal) < 0) {
+            maximum = newMaxVal;
+          }
+        }
+        return maximum;
+      }
+      case LITERAL -> { return new BigDecimal(new BigInteger(packet.getLiteralBinary(), 2)); }
+      case GRATER_THAN -> {
+        List<Packet> subPackets = packet.getSubPackets();
+        BigDecimal firstSubPacketValue = evaluateTransmissionPacket(subPackets.get(0));
+        BigDecimal secondSubPacketValue = evaluateTransmissionPacket(subPackets.get(1));
+        if (firstSubPacketValue.compareTo(secondSubPacketValue) > 0) {
+          return BigDecimal.valueOf(1L);
+        }
+        return BigDecimal.valueOf(0L);
+      }
+      case LESS_THAN -> {
+        List<Packet> subPackets = packet.getSubPackets();
+        BigDecimal firstSubPacketValue = evaluateTransmissionPacket(subPackets.get(0));
+        BigDecimal secondSubPacketValue = evaluateTransmissionPacket(subPackets.get(1));
+        if (firstSubPacketValue.compareTo(secondSubPacketValue) < 0) {
+          return BigDecimal.valueOf(1L);
+        }
+        return BigDecimal.valueOf(0L);
+      }
+      case EQUAL -> {
+        List<Packet> subPackets = packet.getSubPackets();
+        BigDecimal firstSubPacketValue = evaluateTransmissionPacket(subPackets.get(0));
+        BigDecimal secondSubPacketValue = evaluateTransmissionPacket(subPackets.get(1));
+        if (firstSubPacketValue.compareTo(secondSubPacketValue) == 0) {
+          return BigDecimal.valueOf(1L);
+        }
+        return BigDecimal.valueOf(0L);
+      }
+      default -> throw new IllegalStateException();
+    }
   }
 
   private int calculateVersionsSum(Packet rootPacket) {
@@ -132,47 +241,44 @@ public class Day16PacketDecoder {
     packet.setTypeId(parseTypeId(packetStartIndex, binaryFormat));
 
     TypeId typeId = packet.getTypeId();
-    switch (typeId) {
-      case LITERAL -> {
-        LiteralBinaryWithEndIndex literalBinaryWithEndIndex = parseLiteralBinary(typeId, packetStartIndex, binaryFormat);
-        packet.setLiteralBinary(literalBinaryWithEndIndex.literalBinary());
-        packet.setPacketEndIndex(literalBinaryWithEndIndex.endIndex());
-      }
-      case OPERATION  -> {
-        LengthTypeId lengthTypeId = parseLengthTypeId(typeId, packetStartIndex, binaryFormat);
-        packet.setLengthTypeId(lengthTypeId);
-        SubPacketsWithEndIndex subPacketsWithEndIndex;
-        if (LengthTypeId.ONE == lengthTypeId) {
-          subPacketsWithEndIndex = parseTotalSubPackets(packetStartIndex, binaryFormat);
 
-          packet.setPacketEndIndex(subPacketsWithEndIndex.endPacketIndex());
+    if (typeId.getType() == TypeOperationOrLiteral.LITERAL) {
+      LiteralBinaryWithEndIndex literalBinaryWithEndIndex = parseLiteralBinary(typeId, packetStartIndex, binaryFormat);
+      packet.setLiteralBinary(literalBinaryWithEndIndex.literalBinary());
+      packet.setPacketEndIndex(literalBinaryWithEndIndex.endIndex());
+    } else {
+      LengthTypeId lengthTypeId = parseLengthTypeId(typeId, packetStartIndex, binaryFormat);
+      packet.setLengthTypeId(lengthTypeId);
+      SubPacketsWithEndIndex subPacketsWithEndIndex;
+      if (LengthTypeId.ONE == lengthTypeId) {
+        subPacketsWithEndIndex = parseTotalSubPackets(packetStartIndex, binaryFormat);
 
-          int packetEndIndex = packet.getPacketEndIndex();
-          for (int currentSubPacket = 0; currentSubPacket < subPacketsWithEndIndex.totalSubPackets(); currentSubPacket++) {
-            Packet newPacket = parsePacket(binaryFormat, packetEndIndex);
-            packetEndIndex = newPacket.getPacketEndIndex();
-            packet.getSubPackets().add(newPacket);
-          }
+        packet.setPacketEndIndex(subPacketsWithEndIndex.endPacketIndex());
 
-          if (!packet.getSubPackets().isEmpty()) {
-            int newPacketEndIndex = packet.getSubPackets().get(packet.getSubPackets().size() - 1).getPacketEndIndex();
-            packet.setPacketEndIndex(newPacketEndIndex);
-          }
+        int packetEndIndex = packet.getPacketEndIndex();
+        for (int currentSubPacket = 0; currentSubPacket < subPacketsWithEndIndex.totalSubPackets(); currentSubPacket++) {
+          Packet newPacket = parsePacket(binaryFormat, packetEndIndex);
+          packetEndIndex = newPacket.getPacketEndIndex();
+          packet.getSubPackets().add(newPacket);
+        }
 
-        } else {
-          subPacketsWithEndIndex = parseTotalLengthOfSubPackets(packetStartIndex, binaryFormat);
+        if (!packet.getSubPackets().isEmpty()) {
+          int newPacketEndIndex = packet.getSubPackets().get(packet.getSubPackets().size() - 1).getPacketEndIndex();
+          packet.setPacketEndIndex(newPacketEndIndex);
+        }
 
-          int totalLengthSubPackets = subPacketsWithEndIndex.totalSubPackets();
-          int packetEndIndex = subPacketsWithEndIndex.endPacketIndex();
+      } else {
+        subPacketsWithEndIndex = parseTotalLengthOfSubPackets(packetStartIndex, binaryFormat);
 
-          int goal = packetEndIndex + totalLengthSubPackets;
-          while (packetEndIndex != goal) {
-            Packet newPacket = parsePacket(binaryFormat, packetEndIndex);
-            packetEndIndex = newPacket.getPacketEndIndex();
-            packet.getSubPackets().add(newPacket);
-            packet.setPacketEndIndex(packetEndIndex);
-          }
+        int totalLengthSubPackets = subPacketsWithEndIndex.totalSubPackets();
+        int packetEndIndex = subPacketsWithEndIndex.endPacketIndex();
 
+        int goal = packetEndIndex + totalLengthSubPackets;
+        while (packetEndIndex != goal) {
+          Packet newPacket = parsePacket(binaryFormat, packetEndIndex);
+          packetEndIndex = newPacket.getPacketEndIndex();
+          packet.getSubPackets().add(newPacket);
+          packet.setPacketEndIndex(packetEndIndex);
         }
       }
     }
@@ -184,7 +290,7 @@ public class Day16PacketDecoder {
   }
 
   private LengthTypeId parseLengthTypeId(TypeId typeId, int startIndex, String binaryFormat) {
-    if (typeId != TypeId.OPERATION) {
+    if (typeId.getType() == TypeOperationOrLiteral.LITERAL) {
       throw new IllegalCallerException("the type id must be OPERATION");
     }
 
@@ -205,14 +311,12 @@ public class Day16PacketDecoder {
   }
 
   private TypeId parseTypeId(int startIndex, String binaryFormat) {
-    if (Integer.parseInt(binaryFormat.substring(startIndex + 3, startIndex + 6), 2) == 4) {
-      return TypeId.LITERAL;
-    }
-    return TypeId.OPERATION;
+    int typeCodeIdRaw = Integer.parseInt(binaryFormat.substring(startIndex + 3, startIndex + 6), 2);
+    return new TypeId(typeCodeIdRaw);
   }
 
   private LiteralBinaryWithEndIndex parseLiteralBinary(TypeId typeId, int startIndex, String binaryFormat) {
-    if (typeId != TypeId.LITERAL) {
+    if (typeId.getType() != TypeOperationOrLiteral.LITERAL) {
       throw new IllegalCallerException("the type id must be LITERAL");
     }
 
@@ -222,7 +326,7 @@ public class Day16PacketDecoder {
     String currentVal;
     do {
       currentVal = binaryFormat.substring(startCharPointer, endCharPointer);
-      binVal.append(binaryFormat.substring(startCharPointer + 1, endCharPointer));
+      binVal.append(binaryFormat, startCharPointer + 1, endCharPointer);
 
       startCharPointer += 5;
       endCharPointer += 5;
