@@ -52,11 +52,7 @@ public class Day16PacketDecoder {
 
     private TypeId typeId;
 
-    private LengthTypeId lengthTypeId;
-
     private String literalBinary;
-
-    private int packetStartIndex;
 
     private int packetEndIndex;
 
@@ -70,14 +66,6 @@ public class Day16PacketDecoder {
 
     public void setPacketEndIndex(int packetEndIndex) {
       this.packetEndIndex = packetEndIndex;
-    }
-
-    public int getPacketStartIndex() {
-      return packetStartIndex;
-    }
-
-    public void setPacketStartIndex(int packetStartIndex) {
-      this.packetStartIndex = packetStartIndex;
     }
 
     public String getLiteralBinary() {
@@ -106,12 +94,7 @@ public class Day16PacketDecoder {
       this.typeId = typeId;
     }
 
-    public LengthTypeId getLengthTypeId() {
-      return lengthTypeId;
-    }
-
-    public void setLengthTypeId(LengthTypeId lengthTypeId) {
-      this.lengthTypeId = lengthTypeId;
+    public void setLengthTypeId() {
     }
   }
 
@@ -248,7 +231,7 @@ public class Day16PacketDecoder {
       packet.setPacketEndIndex(literalBinaryWithEndIndex.endIndex());
     } else {
       LengthTypeId lengthTypeId = parseLengthTypeId(typeId, packetStartIndex, binaryFormat);
-      packet.setLengthTypeId(lengthTypeId);
+      packet.setLengthTypeId();
       SubPacketsWithEndIndex subPacketsWithEndIndex;
       if (LengthTypeId.ONE == lengthTypeId) {
         subPacketsWithEndIndex = parseTotalSubPackets(packetStartIndex, binaryFormat);
